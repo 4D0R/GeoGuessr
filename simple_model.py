@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from preprocessing import get_data, one_hot_encode
+from preprocessing import get_data, one_hot_encode, tf_load_images
 
 class CountryClassifier(tf.keras.Model):
 
@@ -25,17 +25,19 @@ class CountryClassifier(tf.keras.Model):
         return self.model(inputs)
 
 def main():
-    NUM_COUNTRIES = 125
+    NUM_COUNTRIES = 124
 
-    (train_imgs, train_labels), (test_imgs, test_labels) = get_data()
-    unique_words = sorted(set(train_labels + test_labels))
-    vocabulary = {w:i for i, w in enumerate(unique_words)}
+    # (train_imgs, train_labels), (test_imgs, test_labels) = get_data()
+    # unique_words = sorted(set(train_labels + test_labels))
+    # vocabulary = {w:i for i, w in enumerate(unique_words)}
 
-    # Vectorize, and return output tuple.
-    train_labels = np.array(list(map(lambda x: vocabulary[x], train_labels)))
-    test_labels  = np.array(list(map(lambda x: vocabulary[x], test_labels)))
-    train_imgs = np.array(train_imgs)
-    test_imgs = np.array(test_imgs)
+    # # Vectorize, and return output tuple.
+    # train_labels = np.array(list(map(lambda x: vocabulary[x], train_labels)))
+    # test_labels  = np.array(list(map(lambda x: vocabulary[x], test_labels)))
+    # train_imgs = np.array(train_imgs)
+    # test_imgs = np.array(test_imgs)
+
+    train, test = tf_load_images()
     
     model = CountryClassifier(num_classes=NUM_COUNTRIES)
 
@@ -46,10 +48,10 @@ def main():
     )
 
     model.fit(
-        train_imgs, train_labels,
+        train,
         epochs=2,
-        batch_size=100,
-        validation_data=(test_imgs, test_labels)
+        batch_size=32,
+        validation_data=(test)
     )
 
     # print()
