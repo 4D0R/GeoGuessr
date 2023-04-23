@@ -18,7 +18,7 @@ class CountryClassifier(tf.keras.Model):
             layer.trainable=False
 
         self.model.add(pretrained_model)
-        self.model.add(tf.keras.layers.Dense(256, activation='relu'))
+        self.model.add(tf.keras.layers.Dense(500, activation='relu'))
         self.model.add(tf.keras.layers.Dense(num_classes, activation='softmax'))
 
     def call(self, inputs):
@@ -50,7 +50,7 @@ def main():
     model.fit(
         train,
         epochs=2,
-        batch_size=32,
+        batch_size=100,
         validation_data=(test)
     )
 
