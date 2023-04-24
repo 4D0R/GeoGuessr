@@ -5,7 +5,10 @@ from pathlib import Path
 from time import sleep
 from multiprocessing import Pool
 import os
+from google.cloud import storage
 
+storage_client = storage.Client()
+bucket = storage_client.get_bucket("geoguessr-imgs")
 
 def main():
     # Multiprocessing
@@ -52,11 +55,12 @@ def scrape_country(country_code):
         )
 
     # Save screenshot of current image and then click to get next one!
-    curr_img = 0
+    # num_imgs = len([name for name in os.listdir(results / country_path) if os.path.isfile(name)])
+    num_imgs = len(list(bucket.list_blobs(prefix=f"scraped_images/{countries[country_code]}")))
     index = 0
-    while curr_img < 1000:
+    while num_imgs < 1000:
         location_data = driver.execute_script(f"return randomLocations.{country_code}")
-        if (curr_img >= len(location_data)):
+        if (index >= len(location_data)):
             driver.refresh()
             sleep(1)
             index = 0
@@ -72,8 +76,11 @@ def scrape_country(country_code):
                 )
             driver.save_screenshot(results / country_path / f"{file_name}.jpg")
             
+            blob = bucket.blob(f"scraped_images/{country_path} /{file_name}.jpg")
+            blob.upload_from_filename(results / country_path / f"{file_name}.jpg")
+            
             driver.find_element(By.ID, "next").click()
-        curr_img += 1
+        num_imgs += 1
 
     # Close driver
     driver.close()
