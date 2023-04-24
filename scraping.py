@@ -26,10 +26,10 @@ def scrape_country(country_code):
     driver = webdriver.Chrome(options=options)
 
     # Go to country
-    sleep(1)
+    # sleep(1)
     driver.get(f"https://randomstreetview.com/{country_code}")
     driver.set_window_size(800, 450)
-    sleep(10)
+    sleep(1)
 
     # Create a directory for results
     country_path = Path(countries[country_code])
@@ -58,13 +58,14 @@ def scrape_country(country_code):
         location_data = driver.execute_script(f"return randomLocations.{country_code}")
         if (curr_img >= len(location_data)):
             driver.refresh()
+            sleep(1)
             index = 0
             continue
         file_name = f"{location_data[index]['lat']}x{location_data[index]['lng']}"
         index += 1
 
         if not os.path.isfile(results / country_path / f"{file_name}.jpg"):
-            sleep(3)
+            sleep(1)
             for className in ["gm-style"]:
                 driver.execute_script(
                     f"Array.prototype.map.call(document.getElementsByClassName('{className}'), x => x.style.display = 'flex');"
