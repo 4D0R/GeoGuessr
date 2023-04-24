@@ -53,9 +53,15 @@ def scrape_country(country_code):
 
     # Save screenshot of current image and then click to get next one!
     curr_img = 0
-    while curr_img < 1:
+    index = 0
+    while curr_img < 1000:
         location_data = driver.execute_script(f"return randomLocations.{country_code}")
-        file_name = f"{location_data[0]['lat']}x{location_data[0]['lng']}"
+        if (curr_img >= len(location_data)):
+            driver.refresh()
+            index = 0
+            continue
+        file_name = f"{location_data[index]['lat']}x{location_data[index]['lng']}"
+        index += 1
 
         if not os.path.isfile(results / country_path / f"{file_name}.jpg"):
             sleep(3)
