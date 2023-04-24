@@ -17,7 +17,7 @@ def scrape_country(country_code):
     print(f"Scraping {countries[country_code]}...")
 
     # Create a directory for the results
-    results = Path("./images")
+    results = Path("./data/scraped_images")
     os.makedirs(results, exist_ok=True)
 
     # Create a new webdriver
@@ -54,14 +54,16 @@ def scrape_country(country_code):
     # Save screenshot of current image and then click to get next one!
     curr_img = 0
     while curr_img < 1:
-        if not os.path.isfile(results / country_path / f"{curr_img}.jpg"):
+        location_data = driver.execute_script(f"return randomLocations.{country_code}")
+        file_name = f"{location_data[0]['lat']}x{location_data[0]['lng']}"
+
+        if not os.path.isfile(results / country_path / f"{file_name}.jpg"):
             sleep(3)
             for className in ["gm-style"]:
                 driver.execute_script(
                     f"Array.prototype.map.call(document.getElementsByClassName('{className}'), x => x.style.display = 'flex');"
                 )
-            driver.save_screenshot(results / country_path / f"{curr_img}.jpg")
-            
+            driver.save_screenshot(results / country_path / f"{file_name}.jpg")
             
             driver.find_element(By.ID, "next").click()
         curr_img += 1
