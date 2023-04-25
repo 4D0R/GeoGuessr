@@ -8,6 +8,7 @@ import os
 from google.cloud import storage
 
 IMGS_PER_COUNTRY = 1000
+FOLDER = "small_scrape"
 
 storage_client = storage.Client()
 bucket = storage_client.get_bucket("geoguessr-imgs")
@@ -29,7 +30,7 @@ def scrape_country(country_code):
     driver = webdriver.Chrome(options=options)
 
     # Go to country
-    # sleep(1)
+    sleep(1)
     driver.get(f"https://randomstreetview.com/{country_code}")
     driver.set_window_size(800, 450)
     sleep(1)
@@ -56,7 +57,7 @@ def scrape_country(country_code):
 
     # Save screenshot of current image and then click to get next one!
     # num_imgs = len([name for name in os.listdir(results / country_path) if os.path.isfile(name)])
-    num_imgs = len(list(bucket.list_blobs(prefix=f"scraped_images/{countries[country_code]}")))
+    num_imgs = len(list(bucket.list_blobs(prefix=f"{FOLDER}/{countries[country_code]}")))
     index = 0
     if num_imgs < IMGS_PER_COUNTRY:
         print(f"Scraping {IMGS_PER_COUNTRY-num_imgs} images from {countries[country_code]}...")
@@ -74,14 +75,14 @@ def scrape_country(country_code):
         index += 1
 
         if not os.path.isfile(results / country_path / f"{file_name}.jpg"):
-            sleep(1)
+            sleep(3)
             for className in ["gm-style"]:
                 driver.execute_script(
                     f"Array.prototype.map.call(document.getElementsByClassName('{className}'), x => x.style.display = 'flex');"
                 )
             driver.save_screenshot(results / country_path / f"{file_name}.jpg")
             
-            blob = bucket.blob(f"scraped_images/{country_path} /{file_name}.jpg")
+            blob = bucket.blob(f"{FOLDER}/{country_path} /{file_name}.jpg")
             blob.upload_from_filename(results / country_path / f"{file_name}.jpg")
             
             driver.find_element(By.ID, "next").click()
