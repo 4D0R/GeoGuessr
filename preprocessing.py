@@ -7,12 +7,12 @@ from PIL import Image
 from tqdm import tqdm
 from tensorflow.keras.applications.resnet50 import preprocess_input
 
-def tf_load_images(dataset_dir="./data/kaggle"):
+def tf_load_images(dataset_dir, batch_size, img_size):
     train = tf.keras.utils.image_dataset_from_directory(
         dataset_dir,
         color_mode='rgb',
-        batch_size=32,
-        image_size=(256, 256),
+        batch_size=batch_size,
+        image_size=(img_size, img_size),
         shuffle=True,
         seed=42,
         validation_split=0.2,
@@ -22,8 +22,8 @@ def tf_load_images(dataset_dir="./data/kaggle"):
     test = tf.keras.utils.image_dataset_from_directory(
         dataset_dir,
         color_mode='rgb',
-        batch_size=32,
-        image_size=(256, 256),
+        batch_size=batch_size,
+        image_size=(img_size, img_size),
         shuffle=True,
         seed=42,
         validation_split=0.2,
