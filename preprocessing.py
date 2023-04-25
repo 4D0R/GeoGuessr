@@ -37,6 +37,8 @@ def tf_load_images(dataset_dir, batch_size, img_size):
 
     return train, test
 
+#https://stackoverflow.com/questions/70260531/how-to-attach-or-get-filenames-from-mapdataset-from-image-dataset-from-directory
+
 def load_images(dataset_dir="./data/kaggle"):
     images = []
     labels = []
