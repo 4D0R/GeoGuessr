@@ -1,5 +1,6 @@
 /data
 /images
 /__pycache__
+/checkpoints
 .DS_Store
 experiments.ipynb
