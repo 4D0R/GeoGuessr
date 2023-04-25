@@ -7,6 +7,8 @@ from multiprocessing import Pool
 import os
 from google.cloud import storage
 
+IMGS_PER_COUNTRY = 1000
+
 storage_client = storage.Client()
 bucket = storage_client.get_bucket("geoguessr-imgs")
 
@@ -17,8 +19,6 @@ def main():
 
 
 def scrape_country(country_code):
-    print(f"Scraping {countries[country_code]}...")
-
     # Create a directory for the results
     results = Path("./data/scraped_images")
     os.makedirs(results, exist_ok=True)
@@ -58,7 +58,12 @@ def scrape_country(country_code):
     # num_imgs = len([name for name in os.listdir(results / country_path) if os.path.isfile(name)])
     num_imgs = len(list(bucket.list_blobs(prefix=f"scraped_images/{countries[country_code]}")))
     index = 0
-    while num_imgs < 1000:
+    if num_imgs < IMGS_PER_COUNTRY:
+        print(f"Scraping {IMGS_PER_COUNTRY-num_imgs} images from {countries[country_code]}...")
+    else:
+        driver.close()
+        return
+    while num_imgs < IMGS_PER_COUNTRY:
         location_data = driver.execute_script(f"return randomLocations.{country_code}")
         if (index >= len(location_data)):
             driver.refresh()
@@ -84,6 +89,7 @@ def scrape_country(country_code):
 
     # Close driver
     driver.close()
+    print(f"    Done Scraping {countries[country_code]}.")
 
 
 if __name__ == "__main__":
