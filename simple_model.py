@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 import numpy as np
 import tensorflow as tf
-from preprocessing import get_data, one_hot_encode, tf_load_images
+from preprocessing import country_load, lat_long_load
 
 class CountryClassifier(tf.keras.Model):
 
@@ -25,10 +25,33 @@ class CountryClassifier(tf.keras.Model):
     def call(self, inputs):
         return self.model(inputs)
 
+class CoordinateClassifier(tf.keras.Model):
+
+    def __init__(self, input_shape=(256,256,3)):
+        super(CoordinateClassifier, self).__init__()
+
+        self.model = tf.keras.Sequential()
+
+        pretrained_model = tf.keras.applications.ResNet50(
+            include_top=False,
+            input_shape=input_shape,
+            pooling='avg',classes=1000,
+            weights='imagenet')
+        for layer in pretrained_model.layers:
+            layer.trainable=False
+
+        self.model.add(pretrained_model)
+        self.model.add(tf.keras.layers.Dense(500, activation='relu'))
+        self.model.add(tf.keras.layers.Dense(2))
+
+    def call(self, inputs):
+        return self.model(inputs)
+
 def parseArguments():
     parser = ArgumentParser(add_help=True)
     parser.add_argument("--load_weights", action="store_true") # load weights from most recent checkpoint
     parser.add_argument("--heatmap", action="store_true") # generate and save heatmap
+    parser.add_argument("--lat_long", action="store_true") # lat long model
     parser.add_argument("--batch_size", type=int, default=100) # batch size
     parser.add_argument("--num_epochs", type=int, default=2) # epochs
     parser.add_argument("--input_dim", type=int, default=256) # input image dimension
@@ -41,23 +64,18 @@ def parseArguments():
     return args
 
 def main(args):
-
-    # (train_imgs, train_labels), (test_imgs, test_labels) = get_data()
-    # unique_words = sorted(set(train_labels + test_labels))
-    # vocabulary = {w:i for i, w in enumerate(unique_words)}
-
-    # # Vectorize, and return output tuple.
-    # train_labels = np.array(list(map(lambda x: vocabulary[x], train_labels)))
-    # test_labels  = np.array(list(map(lambda x: vocabulary[x], test_labels)))
-    # train_imgs = np.array(train_imgs)
-    # test_imgs = np.array(test_imgs)
-
-    train, test = tf_load_images(args.data_dir + "/kaggle", args.batch_size, args.input_dim)
+    if args.lat_long:
+        train, test = lat_long_load(args.data_dir + "/scraped_images", args.batch_size, args.input_dim)
+        model = CoordinateClassifier()
+        loss_fn = tf.keras.losses.MeanSquaredError()
+    else:
+        train, test = country_load(args.data_dir + "/kaggle", args.batch_size, args.input_dim)
+        model = CountryClassifier(num_classes=args.num_classes)
+        loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
     
-    model = CountryClassifier(num_classes=args.num_classes)
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=args.learning_rate), 
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(), 
+        loss=loss_fn, 
         metrics=['accuracy'],
     )
 

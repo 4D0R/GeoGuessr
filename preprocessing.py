@@ -6,8 +6,50 @@ import tensorflow as tf
 from PIL import Image
 from tqdm import tqdm
 from tensorflow.keras.applications.resnet50 import preprocess_input
+import glob
 
-def tf_load_images(dataset_dir, batch_size, img_size):
+def lat_long_load(dataset_dir, batch_size, img_size):
+    paths = []
+    labels = []
+
+    for filepath in glob.iglob(f'{dataset_dir}/*/*.jpg'):
+        paths.append(filepath)
+        coord_list = filepath.split("/")[-1].split("x")
+        coord = [float(coord_list[0]), float(coord_list[1][:-4])]
+        labels.append(coord)
+
+    SIZE = len(paths)
+
+    paths = tf.constant(paths)
+    labels = tf.constant(labels)
+
+    shuffled_indices = tf.random.shuffle(range(SIZE))
+    paths = tf.gather(paths, shuffled_indices)
+    labels = tf.gather(labels, shuffled_indices)
+
+    def _parse_function(filename, label):
+        image_string = tf.io.read_file(filename)
+        image_decoded = tf.image.decode_jpeg(image_string, channels=3)
+        image = tf.cast(image_decoded, tf.float32)
+        image = tf.image.resize(image, [img_size, img_size])
+        image = preprocess_input(image)
+        return image, label
+
+    split = int(SIZE*.8)
+
+    train = tf.data.Dataset.from_tensor_slices((paths[:split], labels[:split]))
+    train = train.map(_parse_function)
+    train = train.batch(batch_size)
+    train = train.prefetch(2)
+
+    test = tf.data.Dataset.from_tensor_slices((paths[split:], labels[split:]))
+    test = test.map(_parse_function)
+    test = test.batch(batch_size)
+    test = test.prefetch(2)
+
+    return train, test
+
+def country_load(dataset_dir, batch_size, img_size):
     train = tf.keras.utils.image_dataset_from_directory(
         dataset_dir,
         color_mode='rgb',
