@@ -86,7 +86,7 @@ def scrape_world(args):
             blob.upload_from_filename(results / country_path / f"{file_name}.jpg")
             
             driver.find_element(By.ID, "next").click()
-        num_scraped += 1
+            num_scraped += 1
 
     # Close driver
     driver.close()
