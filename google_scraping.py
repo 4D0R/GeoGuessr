@@ -102,10 +102,10 @@ def get_n_images(n, index):
     i = 0
     already_downloaded = 0
     no_image = 0
-    
-    pbar = tqdm(total=n)
+
+    pbar = tqdm(total=n, bar_format='{desc:20}{percentage:3.0f}%|{bar:15}{r_bar}')
     while i < n:
-        pbar.set_description(f"Already Downloaded: {already_downloaded}, No Image: {no_image}\t")
+        pbar.set_description(f"In Bucket: {already_downloaded}, No Image: {no_image}\t")
         latlong = fake.location_on_land() # (latitude, longitude, place name, two-letter country code, timezone)
         blobs = storage_client.list_blobs("geoguessr-imgs", prefix=f"streetviews/{latlong[3]}",)
         for blob in blobs:
@@ -126,8 +126,9 @@ def get_n_images(n, index):
 
 def main(total_images):
     threads = list()
-    for index in range(10):
-        x = threading.Thread(target=get_n_images, args=(total_images // 10, index,))
+    NUM_THREADS = 20
+    for index in range(NUM_THREADS):
+        x = threading.Thread(target=get_n_images, args=(total_images // NUM_THREADS, index,))
         threads.append(x)
         x.start()
 
@@ -136,6 +137,6 @@ def main(total_images):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--n", type=int, default=1000)
+    parser.add_argument("--n", type=int, default=10000)
     args = parser.parse_args()
     main(args.n)
