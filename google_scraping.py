@@ -102,11 +102,15 @@ def get_n_images(n, index):
     i = 0
     already_downloaded = 0
     no_image = 0
+    bad_country = 0
 
     pbar = tqdm(total=n, bar_format='{desc:20}{percentage:3.0f}%|{bar:15}{r_bar}')
     while i < n:
-        pbar.set_description(f"In Bucket: {already_downloaded}, No Image: {no_image}\t")
+        pbar.set_description(f"In Bucket: {already_downloaded}, No Image: {no_image}, Bad Country: {bad_country}\t")
         latlong = fake.location_on_land() # (latitude, longitude, place name, two-letter country code, timezone)
+        if latlong[3] in ["US", "GB", "FR", "JP", "IT", "BE", "RU", "NL", "DE", "IN", "ES", "ID", "AU", "TH", "BR", "MX", "CA", "PH"]:
+            bad_country += 1
+            continue
         lat = str(float(latlong[0]) + round(random.uniform(-0.5, 0.5), 5))
         long = str(float(latlong[1]) + round(random.uniform(-0.5, 0.5), 5))
         blobs = storage_client.list_blobs("geoguessr-imgs", prefix=f"streetviews/{latlong[3]}",)
