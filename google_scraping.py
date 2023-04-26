@@ -117,7 +117,7 @@ def get_n_images(n, index):
         else:
             api_key = "AIzaSyDPKuAFZQk76T4eSehLw4Qs3eJ5jfyCYx4"
             gwu_viewer = StreetViewer(api_key=api_key,
-                                    location= latlong[0] + "," + latlong[1],
+                                    location= lat + "," + long,
                                     country=latlong[3])
             # gwu_viewer.get_meta()
             if gwu_viewer.get_pic():
