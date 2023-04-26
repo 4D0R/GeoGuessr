@@ -65,7 +65,7 @@ def parseArguments():
 
 def main(args):
     if args.lat_long:
-        train, test = lat_long_load(args.data_dir + "/scraped_images", args.batch_size, args.input_dim)
+        train, test = lat_long_load(args.data_dir + "/streetviews", args.batch_size, args.input_dim)
         model = CoordinateClassifier()
         loss_fn = tf.keras.losses.MeanSquaredError()
     else:

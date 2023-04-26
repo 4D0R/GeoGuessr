@@ -14,7 +14,7 @@ def lat_long_load(dataset_dir, batch_size, img_size):
 
     for filepath in glob.iglob(f'{dataset_dir}/*/*.jpg'):
         paths.append(filepath)
-        coord_list = filepath.split("/")[-1].split("x")
+        coord_list = filepath.split("/")[-1].split(",")
         coord = [float(coord_list[0]), float(coord_list[1][:-4])]
         labels.append(coord)
 
