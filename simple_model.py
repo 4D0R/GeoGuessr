@@ -80,7 +80,8 @@ def main(args):
     )
 
     # set up checkpoint callback
-    checkpoint_path = args.checkpoint_dir + "simple_train/cp-{epoch:04d}.ckpt"
+    folder = "/latlong/" if args.lat_long else "/country/"
+    checkpoint_path = args.checkpoint_dir + folder + "cp-{epoch:04d}.ckpt"
     cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
     # load weights from most recent checkpoint
