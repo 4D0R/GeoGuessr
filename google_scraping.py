@@ -1,10 +1,10 @@
 import requests
 import threading
 from argparse import ArgumentParser
+from tqdm.auto import tqdm
+import random
 
 from faker import Faker
-fake = Faker()
-Faker.seed(42)
 
 from google.cloud import storage
 storage_client = storage.Client()
@@ -92,19 +92,37 @@ class StreetViewer(object):
                 self._pic_response.close()
                 return False
 
-def generate_coordinate():
-    return fake.location_on_land() # (latitude, longitude, place name, two-letter country code, timezone)
+# def generate_coordinate():
+#     return fake.location_on_land() # (latitude, longitude, place name, two-letter country code, timezone)
 
 def get_n_images(n, index):
-    for _ in range(n):
-        latlong = generate_coordinate()
-        api_key = "AIzaSyDPKuAFZQk76T4eSehLw4Qs3eJ5jfyCYx4"
-        gwu_viewer = StreetViewer(api_key=api_key,
-                                  location= latlong[0] + "," + latlong[1],
-                                  country=latlong[3])
-        # gwu_viewer.get_meta()
-        if not gwu_viewer.get_pic():
-            n -= 1
+    fake = Faker()
+    Faker.seed(random.randint(0, 100000))
+
+    i = 0
+    already_downloaded = 0
+    no_image = 0
+    
+    pbar = tqdm(total=n)
+    while i < n:
+        pbar.set_description(f"Already Downloaded: {already_downloaded}, No Image: {no_image}\t")
+        latlong = fake.location_on_land() # (latitude, longitude, place name, two-letter country code, timezone)
+        blobs = storage_client.list_blobs("geoguessr-imgs", prefix=f"streetviews/{latlong[3]}",)
+        for blob in blobs:
+            if blob.name == f"streetviews/{latlong[3]}/{latlong[0]},{latlong[1]}.jpg":
+                already_downloaded += 1
+                break
+        else:
+            api_key = "AIzaSyDPKuAFZQk76T4eSehLw4Qs3eJ5jfyCYx4"
+            gwu_viewer = StreetViewer(api_key=api_key,
+                                    location= latlong[0] + "," + latlong[1],
+                                    country=latlong[3])
+            # gwu_viewer.get_meta()
+            if gwu_viewer.get_pic():
+                i += 1
+                pbar.update(1)
+            else:
+                no_image += 1
 
 def main(total_images):
     threads = list()
