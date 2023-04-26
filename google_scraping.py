@@ -107,8 +107,8 @@ def get_n_images(n, index):
     while i < n:
         pbar.set_description(f"In Bucket: {already_downloaded}, No Image: {no_image}\t")
         latlong = fake.location_on_land() # (latitude, longitude, place name, two-letter country code, timezone)
-        lat = str(float(latlong[0]) + random.uniform(-0.5, 0.5))
-        long = str(float(latlong[1]) + random.uniform(-0.5, 0.5))
+        lat = str(float(latlong[0]) + round(random.uniform(-0.5, 0.5), 5))
+        long = str(float(latlong[1]) + round(random.uniform(-0.5, 0.5), 5))
         blobs = storage_client.list_blobs("geoguessr-imgs", prefix=f"streetviews/{latlong[3]}",)
         for blob in blobs:
             if blob.name == f"streetviews/{latlong[3]}/{lat},{long}.jpg":
