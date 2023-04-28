@@ -1,13 +1,10 @@
 # GeoGuessr
 
-To run the country classificaiton model:
+To load in data:
+`gsutil -m cp -n -r gs://geoguessr-imgs/streetviews data/`
 
-'''
-python simple_model.py
-'''
+To run the country classificaiton model:
+`python simple_model.py`
 
 To run the lat-long prediction model:
-
-'''
-python simple_model.py --lat_long
-'''
+`python simple_model.py --lat_long`
