@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 import numpy as np
 import tensorflow as tf
 from preprocessing import country_load, lat_long_load
+from huggingface_hub import push_to_hub_keras
 
 class CountryClassifier(tf.keras.Model):
 
@@ -16,8 +17,10 @@ class CountryClassifier(tf.keras.Model):
         for layer in pretrained_model.layers:
             layer.trainable=False
 
-        dense1 = tf.keras.layers.Dense(500, activation='relu')(pretrained_model.layers[-1].output)
-        dense2 = tf.keras.layers.Dense(num_classes, activation='softmax')(dense1)
+        dropout1 = tf.keras.layers.Dropout(0.3)(pretrained_model.layers[-1].output)
+        dense1 = tf.keras.layers.Dense(500, activation='relu')(dropout1)
+        dropout2 = tf.keras.layers.Dropout(0.4)(dense1)
+        dense2 = tf.keras.layers.Dense(num_classes, activation='softmax')(dropout2)
         self.model = tf.keras.Model(inputs=pretrained_model.inputs, outputs=dense2)
 
 
@@ -77,16 +80,16 @@ def main(args):
     )
 
     # set up checkpoint callback
-    folder = "/latlong/" if args.lat_long else "/country/"
-    checkpoint_path = args.checkpoint_dir + folder + "cp-{epoch:04d}.ckpt"
-    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
+    # folder = "/latlong/" if args.lat_long else "/country/"
+    # checkpoint_path = args.checkpoint_dir + folder + "cp.ckpt"
+    # cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1, save_best_only=True)
 
     # load weights from most recent checkpoint
-    if args.load_weights:
-        model.load_weights(tf.train.latest_checkpoint(args.checkpoint_dir + folder))
+    # if args.load_weights:
+    #     model.load_weights(tf.train.latest_checkpoint(args.checkpoint_dir + folder))
     
     # only save weights if not loading from checkpoint
-    callbacks = [] if args.load_weights else [cp_callback]
+    # callbacks = [] if args.load_weights else [cp_callback]
 
     # train model
     model.fit(
@@ -94,8 +97,13 @@ def main(args):
         epochs=args.num_epochs,
         batch_size=args.batch_size,
         validation_data=(test),
-        callbacks=callbacks
+        # callbacks=callbacks
     )
+
+    if args.lat_long:
+        push_to_hub_keras(model, 'rohanmyer/latlongpredictor')
+    else:
+        push_to_hub_keras(model, 'rohanmyer/countryclassifier')
 
 if __name__ == '__main__':
     args = parseArguments()
