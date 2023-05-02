@@ -8,8 +8,6 @@ class CountryClassifier(tf.keras.Model):
     def __init__(self, num_classes, input_shape=(256,256,3)):
         super(CountryClassifier, self).__init__()
 
-        self.model = tf.keras.Sequential()
-
         pretrained_model = tf.keras.applications.ResNet50(
             include_top=False,
             input_shape=input_shape,
@@ -18,9 +16,10 @@ class CountryClassifier(tf.keras.Model):
         for layer in pretrained_model.layers:
             layer.trainable=False
 
-        self.model.add(pretrained_model)
-        self.model.add(tf.keras.layers.Dense(500, activation='relu'))
-        self.model.add(tf.keras.layers.Dense(num_classes, activation='softmax'))
+        dense1 = tf.keras.layers.Dense(500, activation='relu')(pretrained_model.layers[-1].output)
+        dense2 = tf.keras.layers.Dense(num_classes, activation='softmax')(dense1)
+        self.model = tf.keras.Model(inputs=pretrained_model.inputs, outputs=dense2)
+
 
     def call(self, inputs):
         return self.model(inputs)
@@ -30,8 +29,6 @@ class CoordinateClassifier(tf.keras.Model):
     def __init__(self, input_shape=(256,256,3)):
         super(CoordinateClassifier, self).__init__()
 
-        self.model = tf.keras.Sequential()
-
         pretrained_model = tf.keras.applications.ResNet50(
             include_top=False,
             input_shape=input_shape,
@@ -40,9 +37,9 @@ class CoordinateClassifier(tf.keras.Model):
         for layer in pretrained_model.layers:
             layer.trainable=False
 
-        self.model.add(pretrained_model)
-        self.model.add(tf.keras.layers.Dense(500, activation='relu'))
-        self.model.add(tf.keras.layers.Dense(2))
+        dense1 = tf.keras.layers.Dense(500, activation='relu')(pretrained_model.layers[-1].output)
+        dense2 = tf.keras.layers.Dense(2, activation='softmax')(dense1)
+        self.model = tf.keras.Model(inputs=pretrained_model.inputs, outputs=dense2)
 
     def call(self, inputs):
         return self.model(inputs)
@@ -86,7 +83,7 @@ def main(args):
 
     # load weights from most recent checkpoint
     if args.load_weights:
-        model.load_weights(tf.train.latest_checkpoint(args.checkpoint_dir + "simple_train"))
+        model.load_weights(tf.train.latest_checkpoint(args.checkpoint_dir + folder))
     
     # only save weights if not loading from checkpoint
     callbacks = [] if args.load_weights else [cp_callback]
@@ -100,8 +97,6 @@ def main(args):
         callbacks=callbacks
     )
 
-    # print()
-    # print(model.summary())
 if __name__ == '__main__':
     args = parseArguments()
     main(args)
