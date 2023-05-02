@@ -1,5 +1,6 @@
 /data
 /images
 /notebooks
+/old_scraping
 /__pycache__
 .DS_Store
