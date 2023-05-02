@@ -38,7 +38,7 @@ class CoordinateClassifier(tf.keras.Model):
             layer.trainable=False
 
         dense1 = tf.keras.layers.Dense(500, activation='relu')(pretrained_model.layers[-1].output)
-        dense2 = tf.keras.layers.Dense(2, activation='softmax')(dense1)
+        dense2 = tf.keras.layers.Dense(2)(dense1)
         self.model = tf.keras.Model(inputs=pretrained_model.inputs, outputs=dense2)
 
     def call(self, inputs):
