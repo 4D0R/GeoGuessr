@@ -1,8 +1,7 @@
 from argparse import ArgumentParser
-import numpy as np
 import tensorflow as tf
 from preprocessing import country_load, lat_long_load
-from huggingface_hub import push_to_hub_keras
+from huggingface_hub import push_to_hub_keras, from_pretrained_keras
 
 class CountryClassifier(tf.keras.Model):
 
@@ -49,17 +48,14 @@ class CoordinateClassifier(tf.keras.Model):
 
 def parseArguments():
     parser = ArgumentParser(add_help=True)
-    parser.add_argument("--load_weights", action="store_true") # load weights from most recent checkpoint
-    parser.add_argument("--heatmap", action="store_true") # generate and save heatmap
+    parser.add_argument("--load_weights", action="store_true") # load weights
     parser.add_argument("--lat_long", action="store_true") # lat long model
-    parser.add_argument("--batch_size", type=int, default=100) # batch size
+    parser.add_argument("--batch_size", type=int, default=256) # batch size
     parser.add_argument("--num_epochs", type=int, default=2) # epochs
     parser.add_argument("--input_dim", type=int, default=256) # input image dimension
     parser.add_argument("--learning_rate", type=float, default=1e-3) # learning rate
-    parser.add_argument("--num_classes", type=int, default=124) # number of classes (countries
+    parser.add_argument("--num_classes", type=int, default=108) # number of classes (countries)
     parser.add_argument("--data_dir", type=str, default="./data") # directory of dataset folders
-    parser.add_argument("--checkpoint_dir", type=str, default="./checkpoints") # directory of checkpoints
-    parser.add_argument("--heatmap_dir", type=str, default="./heatmaps") # directory of heatmaps
     args = parser.parse_args()
     return args
 
@@ -72,24 +68,17 @@ def main(args):
         train, test = country_load(args.data_dir + "/streetviews", args.batch_size, args.input_dim)
         model = CountryClassifier(num_classes=args.num_classes)
         loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
-    
+
+    # load weights
+    path = 'rohanmyer/latlongpredictor' if args.lat_long else 'rohanmyer/countryclassifier'
+    if args.load_weights:
+        from_pretrained_keras(path)
+
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=args.learning_rate), 
         loss=loss_fn, 
         metrics=['accuracy'],
     )
-
-    # set up checkpoint callback
-    # folder = "/latlong/" if args.lat_long else "/country/"
-    # checkpoint_path = args.checkpoint_dir + folder + "cp.ckpt"
-    # cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1, save_best_only=True)
-
-    # load weights from most recent checkpoint
-    # if args.load_weights:
-    #     model.load_weights(tf.train.latest_checkpoint(args.checkpoint_dir + folder))
-    
-    # only save weights if not loading from checkpoint
-    # callbacks = [] if args.load_weights else [cp_callback]
 
     # train model
     model.fit(
@@ -97,13 +86,11 @@ def main(args):
         epochs=args.num_epochs,
         batch_size=args.batch_size,
         validation_data=(test),
-        # callbacks=callbacks
     )
 
-    if args.lat_long:
-        push_to_hub_keras(model, 'rohanmyer/latlongpredictor')
-    else:
-        push_to_hub_keras(model, 'rohanmyer/countryclassifier')
+    # save model
+    if not args.load_weights:
+        push_to_hub_keras(model, path)
 
 if __name__ == '__main__':
     args = parseArguments()
