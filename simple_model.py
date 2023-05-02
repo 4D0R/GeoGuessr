@@ -66,7 +66,7 @@ def main(args):
         model = CoordinateClassifier()
         loss_fn = tf.keras.losses.MeanSquaredError()
     else:
-        train, test = country_load(args.data_dir + "/kaggle", args.batch_size, args.input_dim)
+        train, test = country_load(args.data_dir + "/streetviews", args.batch_size, args.input_dim)
         model = CountryClassifier(num_classes=args.num_classes)
         loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
     
