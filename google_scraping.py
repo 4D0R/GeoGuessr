@@ -119,7 +119,7 @@ def get_n_images(n, index):
                 already_downloaded += 1
                 break
         else:
-            api_key = "AIzaSyDPKuAFZQk76T4eSehLw4Qs3eJ5jfyCYx4"
+            api_key = API_KEY
             gwu_viewer = StreetViewer(api_key=api_key,
                                     location= lat + "," + long,
                                     country=latlong[3])
